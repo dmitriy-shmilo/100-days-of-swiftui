@@ -11,18 +11,20 @@ struct ContentView: View {
 	let tipPercentages = [10, 15, 20, 25, 0]
 	
 	@State private var checkAmount = ""
-	@State private var numberOfPeople = 2
+	@State private var numberOfPeople = ""
 	@State private var tipPercentage = 2
 	
 	var totalPerPerson: Double {
-		let people = Double(numberOfPeople + 2)
+		let people = Double(numberOfPeople) ?? 2
+		return grandTotal / people
+	}
+	
+	var grandTotal: Double {
 		let tip = Double(tipPercentages[tipPercentage])
 		let orderTotal = Double(checkAmount) ?? 0.0
 		
 		let tipMod = 1 + tip / 100.0
-		let grandTotal = orderTotal * tipMod
-		
-		return grandTotal / people
+		return orderTotal * tipMod
 	}
 	
 	var body: some View {
@@ -31,13 +33,8 @@ struct ContentView: View {
 				Section {
 					TextField("Total amount:", text: $checkAmount)
 						.keyboardType(.decimalPad)
-				}
-				Section {
-					Picker("Number of People", selection: $numberOfPeople) {
-						ForEach(2..<10) {
-							Text("\($0) people")
-						}
-					}
+					TextField("People", text: $numberOfPeople)
+						.keyboardType(.numberPad)
 				}
 				Section(header: Text("Tip %")) {
 					Picker("Tip %", selection: $tipPercentage) {
@@ -47,7 +44,10 @@ struct ContentView: View {
 					}
 					.pickerStyle(SegmentedPickerStyle())
 				}
-				Section {
+				Section(header: Text("Total with tip:")) {
+					Text("\(grandTotal, specifier: "%.2f")")
+				}
+				Section(header: Text("Per person:")) {
 					Text("\(totalPerPerson, specifier: "%.2f")")
 				}
 			}
