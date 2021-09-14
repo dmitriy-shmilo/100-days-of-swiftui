@@ -32,14 +32,8 @@ struct ContentView: View {
 				
 				VStack {
 					ForEach(0..<3) { n in
-						Button(action: {
-							showAlert(isWrong: n != correctAnswer)
-						}) {
-							Image(self.countries[n])
-								.renderingMode(.original)
-								.clipShape(Capsule())
-								.overlay(Capsule().stroke(Color.black, lineWidth: 1))
-								.shadow(color: .black, radius: 2)
+						FlagView(image: self.countries[n]) {
+							postAnswer(index: n)
 						}
 					}
 					Text("Score: \(score)")
