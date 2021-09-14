@@ -12,6 +12,8 @@ struct ContentView: View {
 	@State var correctAnswer = Int.random(in: 0...2)
 	@State var alertPresented = false
 	@State var alertTitle = ""
+	@State var alertMessage = ""
+	@State var score = 0
 	
     var body: some View {
 		ZStack {
@@ -40,20 +42,25 @@ struct ContentView: View {
 								.shadow(color: .black, radius: 2)
 						}
 					}
+					Text("Score: \(score)")
+						.font(.title)
 					Spacer()
 				}
 			}
 			.foregroundColor(.white)
 		}
 		.alert(isPresented: $alertPresented) {
-			Alert(title: Text(alertTitle), message: nil, dismissButton: .default(Text("Continue")) {
+			Alert(title: Text(alertTitle), message: Text(alertMessage), dismissButton: .default(Text("Continue")) {
 				askQuestion()
 			})
 		}
     }
 	
-	private func showAlert(isWrong: Bool) {
-		alertTitle = isWrong ? "Wrong" : "Correct"
+	private func postAnswer(index: Int) {
+		let isCorrect = index == correctAnswer
+		alertTitle = isCorrect ? "Correct" : "Wrong"
+		score += isCorrect ? 1 : 0
+		alertMessage = "Your new score is \(score)"
 		alertPresented = true
 	}
 	
