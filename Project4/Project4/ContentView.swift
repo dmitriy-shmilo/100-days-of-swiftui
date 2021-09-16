@@ -28,67 +28,71 @@ struct ContentView: View {
 	var body: some View {
 		NavigationView {
 			Form {
-				VStack(alignment: .leading, spacing: 0) {
-					Text("Wake up time:")
+				Section(
+					header:Text("Wake up time:")
 						.font(.headline)
+				) {
 					DatePicker("Enter wake up time", selection: $wakeUp, displayedComponents: .hourAndMinute)
 						.labelsHidden()
 						.datePickerStyle(WheelDatePickerStyle())
 				}
 				
-				
-				
-				VStack(alignment: .leading, spacing: 0) {
-					Text("Time to sleep:")
+				Section(
+					header:Text("Time to sleep:")
 						.font(.headline)
+				) {
 					Stepper(value: $sleepAmount, in: 4...12, step: 0.25) {
 						Text("\(sleepAmount, specifier: "%.2f") hours")
 					}
 				}
 				
 				
-				VStack(alignment: .leading, spacing: 0) {
-					Text("Coffee cups per day:")
+				Section(
+					header:Text("Coffee cups per day:")
 						.font(.headline)
-					Stepper(value: $coffee, in: 1...20) {
-						if coffee == 1 {
-							Text("1 cup")
-						} else {
-							Text("\(coffee) cups")
+				) {
+					Picker(
+						selection: $coffee,
+						label: Text("Picker")
+					) {
+						ForEach(1...20, id: \.self) { n in
+							if n == 1 {
+								Text("1 cup").tag(n)
+							} else {
+								Text("\(n) cups").tag(n)
+							}
 						}
 					}
 				}
+				
+				Section(
+					header:Text("You should go to bed at:")
+						.font(.headline)
+				) {
+					Text(calculateBedTime())
+						.font(.title)
+				}
 			}
 			.navigationTitle("BetterRest")
-			.navigationBarItems(
-				trailing: Button(action:calculateBedTime) {
-					Text("Calculate")
-				})
-			.alert(isPresented: $showingAlert) {
-				Alert(title: Text(alertTitle), message: Text(alertMessage), dismissButton: .default(Text("OK")))
-			}
 		}
 	}
 	
-	private func calculateBedTime() {
+	
+	private func calculateBedTime() -> String{
 		if let mlModel = try? SleepCalculator(configuration: MLModelConfiguration()) {
 			let components = Calendar.current.dateComponents([.hour, .minute], from: wakeUp)
 			let hour = (components.hour ?? 0) * 60 * 60
 			let minute = (components.minute ?? 0) * 60
 			
-			do {
-				let prediction = try mlModel.prediction(wake: Double(hour + minute), estimatedSleep: sleepAmount, coffee: Double(coffee))
+			if let prediction = try? mlModel.prediction(wake: Double(hour + minute), estimatedSleep: sleepAmount, coffee: Double(coffee)) {
 				let sleepTime = wakeUp - prediction.actualSleep
 				let formatter = DateFormatter()
 				formatter.timeStyle = .short
-				alertTitle = "You should go to sleep at:"
-				alertMessage = "\(formatter.string(from: sleepTime))"
-			} catch {
-				alertTitle = "Error"
-				alertMessage = "There was an error calculating bedtime."
+				return "\(formatter.string(from: sleepTime))"
 			}
-			showingAlert = true
 		}
+		
+		return "There was an error calculating bedtime."
 	}
 }
 
