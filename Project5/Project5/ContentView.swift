@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ContentView: View {
+	static let MinCharacterCount = 3
+
 	@State
 	private var usedWords = [String]()
 	@State
@@ -22,6 +24,9 @@ struct ContentView: View {
 	@State
 	private var showingError = false
 	
+	@State
+	private var score = 0
+	
 	var body: some View {
 		NavigationView {
 			VStack {
@@ -35,8 +40,16 @@ struct ContentView: View {
 					Image(systemName: "\($0.count).circle")
 					Text($0)
 				}
+
+				Text("Score: \(score)")
+					.font(.largeTitle)
 			}
 			.navigationTitle(rootWord)
+			.toolbar {
+				Button("Restart") {
+					startGame()
+				}
+			}
 		}
 		.onAppear {
 			startGame()
@@ -47,6 +60,9 @@ struct ContentView: View {
 	}
 	
 	private func startGame() {
+		score = 0
+		usedWords.removeAll(keepingCapacity: true)
+	
 		if let url = Bundle.main.url(forResource: "start", withExtension: "txt") {
 			if let words = try? String(contentsOf: url).components(separatedBy: "\n") {
 				rootWord = words.randomElement()!
@@ -66,7 +82,12 @@ struct ContentView: View {
 			return
 		}
 		
-		guard isOriginal(word: answer) else {
+		guard isLongEnough(word: answer) else {
+			showError(title: "Answer isn't long enough", message: "Answers should be at least \(Self.MinCharacterCount) letters long")
+			return
+		}
+		
+		guard isOriginal(word: answer) && answer != rootWord else {
 			showError(title: "Word used already", message: "There's such word in the list already")
 			return
 		}
@@ -82,9 +103,14 @@ struct ContentView: View {
 		}
 		
 		usedWords.insert(answer, at: 0)
+		score += answer.count
 		newWord = ""
 	}
 	
+	private func isLongEnough(word: String) -> Bool {
+		word.count >= Self.MinCharacterCount
+	}
+
 	private func isOriginal(word: String) -> Bool {
 		!usedWords.contains(word)
 	}
